@@ -1,25 +1,34 @@
-import React, {useState} from "react";
-import { MapContainer,TileLayer,Marker,Polyline, useMapEvents } from "react-leaflet";
+import React, { useState } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  useMapEvents,
+} from "react-leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
+
 const UCF = [28.6024, -81.2001];
 
-function LocationMarker({setPickup, setDropoff}) {
+// Click handler for pickup/dropoff
+function LocationMarker({ setPickup, setDropoff }) {
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
       setPickup((prev) => (prev ? prev : [lat, lng]));
-      setDropoff((prev) => (prev && prev ? null : [lat, lng]));
+      setDropoff((prev) => (prev && prev.length ? null : [lat, lng]));
     },
   });
   return null;
 }
 
-function gasShare({distanceMiles}){
-  const ratePerMile = 0.25; 
-  const cost = distanceMiles * ratePerMile;
+function GasShare({ distance }) {
+  const ratePerMile = 0.25;
+  const cost = distance * ratePerMile || 0;
+
   return (
-    <div 
+    <div
       style={{
         border: "1px solid black",
         borderRadius: 12,
@@ -27,16 +36,16 @@ function gasShare({distanceMiles}){
         width: 280,
         backgroundColor: "#f9f9f9",
       }}
-      >
+    >
       <h3>Gas Share Estimate</h3>
-      <p>Distance: {distanceMiles.toFixed(2)} miles</p>
-      <p> 
+      <p>Distance: {distance.toFixed(2)} miles</p>
+      <p>
         Rate: ${ratePerMile.toFixed(2)} per mile
         <br />
         <strong>Total: ${cost.toFixed(2)}</strong>
       </p>
     </div>
-  )
+  );
 }
 
 export default function App() {
@@ -45,45 +54,30 @@ export default function App() {
   const [route, setRoute] = useState([]);
   const [distance, setDistance] = useState(0);
   const [loading, setLoading] = useState(false);
+
   console.log("ORS Key Loaded:", process.env.REACT_APP_ORS_KEY);
 
   async function getRoute() {
     if (!pickup || !dropoff) return;
     setLoading(true);
-
     try {
-      const body = {
-        coordinates: [
-          [pickup[1], pickup[0]],
-          [dropoff[1], dropoff[0]],
-        ],
-      };
-
-      const res = await axios.post(
-        "https://api.openrouteservice.org/v2/directions/driving-car",
-        body,
-        {
-          headers: {
-            Authorization: process.env.REACT_APP_ORS_KEY,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const geometry = res.data.features[0].geometry.coordinates;
-      const coords = geometry.map((c) => [c[1], c[0]]);
+      const url = `https://router.project-osrm.org/route/v1/driving/${pickup[1]},${pickup[0]};${dropoff[1]},${dropoff[0]}?overview=full&geometries=geojson`;
+      const res = await axios.get(url);
+  
+      const coords = res.data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
       setRoute(coords);
-
-      const meters = res.data.features[0].properties.summary.distance;
+  
+      const meters = res.data.routes[0].distance;
       const miles = meters / 1609.34;
       setDistance(miles);
     } catch (err) {
       console.error(err);
-      alert("Failed to fetch route. Check your API key or try again later.");
+      alert("Failed to fetch route.");
     } finally {
       setLoading(false);
     }
   }
+  
 
   function resetAll() {
     setPickup(null);
@@ -144,7 +138,7 @@ export default function App() {
           </div>
         </div>
 
-        <gasShare distance={distance} />
+        <GasShare distance={distance} />
       </div>
     </div>
   );
