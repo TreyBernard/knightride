@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Settings.css";
 import logo from "./knight-logo.png";
 import homeImage from "./house-image.png";
@@ -7,6 +8,7 @@ import accountImage from "./account.png";
 import knightMarker from "./knight-marker.png";
 
 export default function Settings() {
+    const navigate = useNavigate();
     return (
         <div className="settings-page">
             <header className="settings-header">
@@ -28,7 +30,20 @@ export default function Settings() {
                     <li>Help &gt;</li>
                 </ul>
 
-                <button className="logout-btn">Log Out</button>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                    <button 
+                        className="back-btn" 
+                        onClick={() => navigate('/home')}
+                    >
+                        Back
+                    </button>
+                    <button 
+                        className="logout-btn" 
+                        onClick={() => navigate('/')}
+                    >
+                        Log Out
+                    </button>
+                </div>
             </div>
         </div>
     );

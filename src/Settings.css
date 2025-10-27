@@ -55,6 +55,17 @@
     color: #d6c48a;
 }
 
+.back-btn {
+    margin-top: 1rem;
+    background-color: #FDD667;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
 .logout-btn {
     margin-top: 1rem;
     background-color: #c4c4c4;
